@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis</title>
+    <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png')}}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='style/profile.css')}}">
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+    <!-- navigation bar----------------------------------------------------------------------------------------------------------------------- -->
+    <nav>
+        <aside class="sidebar">
+          <div class="sidebar-header">
+            <img src="static/images/logo.png" alt="logo" />
+            <a href="{{url_for('home')}}"><h2>Simulation</h2></a>
+          </div>
+          <ul class="sidebar-links">
+            <h4>
+              <span>Main Menu</span>
+              <div class="menu-separator"></div>
+            </h4>
+            <li>
+              <a href="{{url_for('profile')}}">
+                <span class="material-symbols-outlined"> dashboard </span>Dashboard</a>
+            </li>
+            <li>
+              <a href="{{url_for('analytics')}}"><span class="material-symbols-outlined"> Analytics </span>Analytics</a>
+            </li>
+            <li>
+              <a href="{{url_for('simulation')}}"><span class="material-symbols-outlined"> monitoring </span>Simulation</a>
+            </li>
+            <h4>
+              <span>General</span>
+              <div class="menu-separator"></div>
+            </h4>
+            <li>
+              <a href="{{url_for('recharge')}}"><span class="material-symbols-outlined"> Wallet </span>Recharge</a>
+            </li>
+            <li>
+              <a href="{{url_for('map')}}"><span class="material-symbols-outlined"> map </span>Map</a>
+            </li>
+            <h4>
+              <span>Account</span>
+              <div class="menu-separator"></div>
+            </h4>
+            <li>
+              <a href="{{url_for('admin_login')}}"><span class="material-symbols-outlined"> account_circle </span>Admin</a>
+            </li>
+            <li>
+              <a href="{{url_for('logout')}}"><span class="material-symbols-outlined"> logout </span>Logout</a>
+            </li>
+          </ul>
+          <div class="user-account">
+            <div class="user-profile">
+              <img src="https://img.icons8.com/ios-filled/100/FFFFFF/user-male-circle.png" alt="Profile Image" />
+              <div class="user-detail">
+                <h3>{{username}}</h3>
+                <span>{{number}}</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </nav>
+      
+<!-- navigation bar----------------------------------------------------------------------------------------------------------------------- -->
+  <section class="home-section">
+    <nav>
+      <div class="sidebar-button">
+        <i class='bx bx-menu sidebarBtn'></i>
+        <span class="dashboard">Analytics</span>
+      </div>
+      <div class="profile-details">
+        <img width="96" height="96" src="https://img.icons8.com/fluency/96/person-male.png" alt="person-male"/>
+        <span class="admin_name">{{username}}</span>
+        <span class="admin_name">&#x1F1EE;&#x1F1F3;</span>
+      </div>
+    </nav>
+ 
+
+    <div class="home-content">
+      <div class="overview-boxes">
+        <div class="box2">
+          <div class="right-side">
+            <div class="box-topic">Total Distance</div>
+            <div class="number" >{{distance}} km</div>
+            <div class="indicator">
+              <i class='bx bx-up-arrow-alt'></i>
+              <span class="text">Up-To-Date</span>
+            </div>
+          </div>
+          <img width="64" height="64" src="https://img.icons8.com/color/48/sedan.png" alt="sedan"/>
+        </div>
+        <div class="box">
+          <div class="right-side">
+            <div class="box-topic">Total Fine </div>
+            <div class="number">{{fine}} Rs.</div>
+            <div class="indicator">
+              <i class='bx bx-up-arrow-alt'></i>
+              <span class="text">Up-To-Date</span>
+            </div>
+          </div>
+          <img width="64" height="64" src="https://img.icons8.com/fluency/48/card-in-use-1.png" alt="card-in-use-1"/>
+        </div>
+        <div class="box">
+          <div class="right-side">
+            <div class="box-topic">Total Tax</div>
+            <div class="number">{{tax}} Rs.</div>
+            <div class="indicator">
+              <i class='bx bx-up-arrow-alt'></i>
+              <span class="text">Up-To-Date</span>
+            </div>
+          </div>
+          <img width="64" height="64" src="https://img.icons8.com/external-wanicon-lineal-color-wanicon/64/external-tax-fintech-wanicon-lineal-color-wanicon.png" alt="external-tax-fintech-wanicon-lineal-color-wanicon"/>
+        </div>
+        <div class="box">
+          <div class="right-side">
+            <div class="box-topic">Total Amount</div>
+            <div class="number">{{total}} Rs.</div>
+            <div class="indicator">
+              <i class='bx bx-up-arrow-alt'></i>
+              <span class="text">Up-To-Date</span>
+            </div>
+          </div>
+          <img width="64" height="64" src="https://img.icons8.com/color/48/bill.png" alt="bill"/>
+        </div>
+      </div>
+      <div class="sales-boxes">
+        <div class="recent-sales box">
+          <div class="title">Recent Movement Analytics</div>
+         
+          {% if image %}
+          <img class="image1" src="data:image/png;base64,{{ image }}" alt="Bill Image">
+          {% else %}
+          <p>No recent bill image available.</p>
+          {% endif %}
+      
+        </div>
+        <div class="top-sales box">
+          <div class="title">Recent Trip Record</div>
+          <ul class="top-sales-details">
+            <li>
+            <a href="#">
+              <span class="product">FROM</span>
+            </a>
+            <span class="price"> {{bill.destination1}}</span>
+          </li>
+          <li>
+            <a href="#">
+              <span class="product">TO </span>
+            </a>
+            <span class="price">{{bill.destination2}}</span>
+          </li>
+          <li>
+            <a href="#">
+              <span class="product">VEHICLE</span>
+            </a>
+            <span class="price">{{bill.vehicle}}</span>
+          </li>
+          <li>
+            <a href="#">
+              <span class="product">DISTANCE</span>
+            </a>
+            <span class="price">{{bill.distance}} km.</span>
+          </li>
+          <li>
+            <a href="#">
+              <span class="product">FINE</span>
+            </a>
+            <span class="price">{{bill.fine}} Rs.</span>
+          </li>
+          <li>
+            <a href="#">
+              <span class="product">TOLL-TAX</span>
+            </a>
+            <span class="price">{{bill.tax}} Rs.</span>
+          </li>
+          <li>
+            <a href="#">
+              <span class="product">TOTAL</span>
+            </a>
+            <span class="price">{{bill.total}} Rs.</span>
+          </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+<!-- <div class="adj">
+   <div class="bg">
+    <div class="graphs">
+      <div class="title">Latitude and Longitude Analytics</div>
+      <img class="image" src="data:lat_long/png;base64,{{ lat_long }}">
+    </div>
+  </div>
+  <div class="bg">
+    <div class="graphs">
+      <div class="title">Speed Prediction</div>
+      <img class="image" src="data:speed_analytics/png;base64,{{ speed_analytics }}">
+    </div>
+  </div>
+  <div class="bg">
+    <div class="graphs">
+      <div class="title">Speed Prediction</div>
+      <img class="image" src="data:arima/png;base64,{{ arima}}">
+    </div>
+  </div>
+</div> -->
+
+<div class="center_graphs">
+  <div class="graphs">
+    <div class="title">Latitude and Longitude Analytics</div><br>
+    <img class="image" src="data:lat_long/png;base64,{{ lat_long }}">
+  </div>
+</div>
+<div class="center_graphs">
+  <div class="graphs">
+    <div class="title">Speed Analytics</div>
+    <img class="image" src="data:speed_analytics/png;base64,{{ speed_analytics }}">
+  </div>
+</div>
+<div class="center_graphs">
+  <div class="graphs">
+    <div class="title">Speed Prediction</div>
+    <img class="image" src="data:arima/png;base64,{{ arima }}">
+  </div>
+</div>
+<div class="center_graphs">
+  <div class="graphs">
+    <div class="title">Geospatial Visualization of Speed</div>
+    <img class="image" src="data:scatter/png;base64,{{ scatter }}">
+  </div>
+</div>
+
+  </section>
+    </body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet"/>
+    <title>About Us</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png')}}">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #141414;
+            color: #eaeaea;
+            scroll-behavior: smooth;
+        }
+        #about {
+            padding: 20px ;
+            background: #1e1e1e;
+            text-align: center;
+        }
+        #about h2 {
+            font-size: 50px;
+            margin-top: 10px;
+            margin-left: -5%;
+            color: #f39c12;
+        }
+        .content {
+            margin: 50px auto;
+            max-width: 900px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.4);
+            text-align: left;  
+        }
+        .content h3 {
+            font-size: 36px;
+            margin-bottom: 15px;
+            color: #f39c12;
+            border-left: 5px solid #f39c12;
+            padding-left: 10px;   
+
+        }
+        .content p {
+            font-size: 20px;
+            line-height: 1.5;
+        }
+        .content ul {
+            font-size: 20px;
+            line-height: 1.5;
+        }
+
+        .container{
+            display: inline;
+            text-align: center;
+            
+        }
+        .container h1{
+            margin-left: -5%;
+        }
+        .container p{
+            margin-left: -5%;
+            font-size: 20px;
+        }
+        .team-members {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 40px;
+            margin-bottom: 18px;
+        }
+        .team-member {
+            text-align: center;
+            width: 300px;
+            padding: 30px;
+            background: #1e1e1e;
+            border-radius: 20px;
+            transition: transform 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .team-member:hover {
+            transform: translateY(-10px);
+            box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .team-member img{
+          border-radius: 20px ;
+          border: 2px solid rgb(255, 255, 255);
+        }
+        .team-member::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.8;
+            z-index: -1;
+            transition: opacity 0.4s ease;
+        }
+        .team-member:hover::before {
+            opacity: 0.3;
+        }
+        .team-member img {
+            width: 180px;
+            height: 180px;
+            margin-bottom: 5px;
+            border: 3px solid #0a0601;
+        }
+       
+    </style>        
+
+<div id="about">
+    <h2>About Us</h2>
+    <div class="content">
+        <p>We team TechConnect introducing to the innovative technique in transportation sector.Our project focuses on simulating a toll collection system using python.This system leverages Python's capabilities to track vehicles using GPS data and calculate fair tolls based on the distance traveled within designated zones.We believe this approach has the potential to streamline traffic flow,eliminate the need for physical toll booths,and ultimately contribute to more efficient and congestion-free transportation network.</p>
+        <p>Traditional toll booths can lead to traffic congestion,especially during peak hours.The stop-and-go nature leads to the wastage of time and also contributes to increased fuel comsumption and air pollution.Our team is determined to tackle this issue by exploring alternative methods for toll collection.</p>
+        <p>Our project simulates a GPS toll-based system using Python.The system uses the geospatial coordinates to track vehicle movement using a .csv(commma separated values) file and calculate toll charges based on the distance traveled within designated toll zones.This eliminates the need of physical toll booths,reduce traffic congestion and improve overall transportation. </p>
+    </div>
+    
+    <div class="content">
+        <h3>Benefits:</h3>
+        <ul>
+            <li>Traffic Reduction</li>
+            <li>Reduced Time Consumption</li>
+            <li>Payment Automation</li>
+            <li>Improved traffic flow </li>
+            <li>Reduced fuel consumption and air pollution</li>
+        </ul>
+    </div>
+    <div class="content">
+        <h3>Future Development:</h3>
+        <p>The simulation serves as a foundation for further development.We envision a system that integrates real-time traffic data to dynamically adjust tolls.We are committed to use python and GPS technology to modify the ways tolls are collected leading to efficient and sustainable transportation future.</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="container"> 
+    <p>Together We Create, Innovate, and Inspire</p></div>
+</div>
+
+<div class="team-members">
+    <div class="team-member">
+        <img src="static/images/ss.jpg" alt="Shravani-Shegokar">
+        <h2>Shravani Shegokar</h2>
+        <a href="https://github.com/Shravani-Shegokar" style="color: #eaeaea;"><i class="ri-github-fill"></i> Shravani-Shegokar</a>
+    </div>
+    <div class="team-member">
+        <img src="static/images/sf.jpg" alt="Shriyansh-Fasate">
+        <h2>Shriyansh Fasate</h2>
+        <a href="https://github.com/shriyansh009" style="color: #eaeaea;"><i class="ri-github-fill"></i> Shriyansh-Fasate</a>
+    </div>
+</div>  

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin-page</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png')}}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='style/profile.css')}}">
+    <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+
+    <nav>
+        <aside class="sidebar">
+          <div class="sidebar-header">
+            <img src="static/images/logo.png" alt="logo" />
+            <a href="{{url_for('profile')}}"><h2>Simulation</h2></a>
+          </div>
+          <ul class="sidebar-links">
+            <h4>
+              <span>Admin</span>
+              <div class="menu-separator"></div>
+            </h4>
+            <li>
+              <a href="{{url_for('admin')}}">
+                <span class="material-symbols-outlined"> dashboard </span>Toll Rate</a>
+            </li>
+            <li>
+              <a href="{{url_for('analyze')}}">
+                <span class="material-symbols-outlined"> Description</span>Data analysis</a>
+            </li>
+            <h4>
+              <span>General</span>
+              <div class="menu-separator"></div>
+            </h4>
+            <li>
+              <a href="{{url_for('map')}}"><span class="material-symbols-outlined"> map </span>Map</a>
+            </li>
+            <li>
+              <a href="{{url_for('price')}}"><span class="material-symbols-outlined"> money </span>Rates</a>
+            </li>
+            <li>
+                <a href="{{url_for('userdata')}}"><span class="material-symbols-outlined"> history </span>History</a>
+              </li>
+            <h4>
+              <span>Account</span>
+              <div class="menu-separator"></div>
+            </h4>
+            <li>
+              <a href="{{url_for('logout')}}"><span class="material-symbols-outlined"> logout </span>Logout</a>
+            </li>
+          </ul>
+          </div>
+        </aside>
+      </nav> 
+    
+      <section class="home-section">
+
+        <nav>
+            <div class="sidebar-button">
+              <i class='bx bx-menu sidebarBtn'></i>
+              <span class="dashboard">Dashboard</span>
+            </div>
+          </nav>
+          <div class="home-content">
+      <div class="overview-boxes">
+        <div class="box">
+            <div class="right-side">
+              <div class="box-topic">Simulation's</div>
+              <div class="number" >{{total_simulations}}</div>
+              <div class="indicator">
+                <i class='bx bx-up-arrow-alt'></i>
+                <span class="text">Up-To-Date</span>
+              </div>
+            </div>
+            <img src="static/images/logo.png" alt="logo" width="48px"/>
+          </div>
+        <div class="box">
+          <div class="right-side">
+            <div class="box-topic">Total Vehicle's</div>
+            <div class="number" >{{vehicle_categories}}</div>
+            <div class="indicator">
+              <i class='bx bx-up-arrow-alt'></i>
+              <span class="text">Up-To-Date</span>
+            </div>
+          </div>
+          <img width="48" height="48" src="https://img.icons8.com/color/48/sedan.png" alt="sedan"/>
+        </div>
+        <div class="box">
+          <div class="right-side">
+            <div class="box-topic">Fine Collected</div>
+            <div class="number">{{total_fine}} Rs.</div>
+            <div class="indicator">
+              <i class='bx bx-up-arrow-alt'></i>
+              <span class="text">Up-To-Date</span>
+            </div>
+          </div>
+          <img width="48" height="48" src="https://img.icons8.com/fluency/48/card-in-use-1.png" alt="card-in-use-1"/>
+        </div>
+        <div class="box">
+          <div class="right-side">
+            <div class="box-topic">Tax Collected</div>
+            <div class="number">{{total_tax }} Rs.</div>
+            <div class="indicator">
+              <i class='bx bx-up-arrow-alt'></i>
+              <span class="text">Up-To-Date</span>
+            </div>
+          </div>
+          <img width="48" height="48" src="https://img.icons8.com/external-wanicon-lineal-color-wanicon/64/external-tax-fintech-wanicon-lineal-color-wanicon.png" alt="external-tax-fintech-wanicon-lineal-color-wanicon"/>
+        </div>
+        <div class="box">
+          <div class="right-side">
+            <div class="box-topic">Amount Collected</div>
+            <div class="number">{{total_amount }} Rs.</div>
+            <div class="indicator">
+              <i class='bx bx-up-arrow-alt'></i>
+              <span class="text">Up-To-Date</span>
+            </div>
+          </div>
+          <img width="48" height="48" src="https://img.icons8.com/color/48/bill.png" alt="bill"/>
+        </div>
+      </div>
+     <div class="center_graphs">
+      <div class="graphs">
+        <div class="title">Correlation Matrix</div>
+        <img class="image" src="data:image/png;base64,{{ heatmap_url }}" >
+      </div>
+    </div>
+    <div class="center_graphs">
+      <div class="graphs">
+        <div class="title">Vehicle Type Distribution</div>
+        <img class="image" src="data:image/png;base64,{{ piechart_url }}" >
+      </div>
+    </div>
+      </section>
+
+</body>
+</html>

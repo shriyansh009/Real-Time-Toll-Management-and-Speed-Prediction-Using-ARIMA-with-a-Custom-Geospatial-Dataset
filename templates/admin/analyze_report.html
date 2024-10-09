@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Analysis Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png')}}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            
+        }
+        main{
+            margin: 40px;
+        }
+        h1, h2, h3 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        nav{
+           width: 100%;
+           height: 60px;
+           background: #4158d0;
+           z-index: 100;
+           box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+           transition: all 0.5s ease;
+        }
+        nav .sidebar-button a{
+            margin: 10px;
+            color: #fff;
+        }
+
+        nav .sidebar-button {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: 500;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="sidebar-button">
+          <a href="{{ url_for('ad_home') }}" style="text-decoration: none; ">Dashboard</a>
+          <a class="btn btn-primary" href="{{url_for('ad_home')}}" role="button">back</a>
+        </div>
+      </nav>
+<main>
+    <h1>Data Analysis Report</h1>
+    <h2>Grouped by Vehicle</h2>
+    <table>
+        <tr>
+            <th>Vehicle</th>
+            <th>Average Total</th>
+            <th>Average Distance</th>
+            <th>Average Tax</th>
+        </tr>
+        {% for row in results['grouped_by_vehicle'].values %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Grouped by Destination</h2>
+    <table>
+        <tr>
+            <th>Destinaton1</th>
+            <th>Destination2</th>
+            <th>Average Total</th>
+            <th>Average Distance</th>
+            <th>Average Tax</th>
+        </tr>
+        {% for row in results['grouped_by_destination'].values %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+            <td>{{ row[4] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Aggregated by User ID</h2>
+    <table>
+        <tr>
+            <th>User ID</th>
+            <th>Total Journey Cost</th>
+            <th>Total Distance</th>
+        </tr>
+        {% for row in results['aggregated_by_user'].values %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Outliers</h2>
+    <h3>Fine</h3>
+    <table>
+        <tr>
+            <th>Destinaton1</th>
+            <th>Destination2</th>
+            <th>Vehicle</th>
+            <th>Fine</th>
+            <th>Total</th>
+            <th>Distance</th>
+            <th>Tax</th>
+            <th>User ID</th>
+        </tr>
+        {% for row in results['outliers']['Fine'].values %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+            <td>{{ row[4] }}</td>
+            <td>{{ row[5] }}</td>
+            <td>{{ row[6] }}</td>
+            <td>{{ row[7] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <div><a href="javascript:window.print()" class="btn btn-success me-1" style="width: 65px; height: 39px;">print</a></div>
+</main>
+</body>
+</html>
+

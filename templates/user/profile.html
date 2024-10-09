@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png')}}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='style/profile.css')}}">
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+    <!-- navigation bar----------------------------------------------------------------------------------------------------------------------- -->
+    <nav>
+        <aside class="sidebar">
+          <div class="sidebar-header">
+            <img src="static/images/logo.png" alt="logo" />
+            <a href="{{url_for('home')}}"><h2>Simulation</h2></a>
+          </div>
+          <ul class="sidebar-links">
+            <h4>
+              <span>Main Menu</span>
+              <div class="menu-separator"></div>
+            </h4>
+            <li>
+              <a href="{{url_for('profile')}}">
+                <span class="material-symbols-outlined"> dashboard </span>Dashboard</a>
+            </li>
+            <li>
+              <a href="{{url_for('analytics')}}"><span class="material-symbols-outlined"> Analytics </span>Analytics</a>
+            </li>
+            <li>
+              <a href="{{url_for('simulation')}}"><span class="material-symbols-outlined"> monitoring </span>Simulation</a>
+            </li>
+            <h4>
+              <span>General</span>
+              <div class="menu-separator"></div>
+            </h4>
+            <li>
+              <a href="{{url_for('recharge')}}"><span class="material-symbols-outlined"> Wallet </span>Recharge</a>
+            </li>
+            <li>
+              <a href="{{url_for('map')}}"><span class="material-symbols-outlined"> map </span>Map</a>
+            </li>
+            <li>
+              <a href="{{url_for('price')}}"><span class="material-symbols-outlined"> money </span>Rates</a>
+            </li>
+            <h4>
+              <span>Account</span>
+              <div class="menu-separator"></div>
+            </h4>
+            <li>
+              <a href="{{url_for('admin_login')}}"><span class="material-symbols-outlined"> account_circle </span>Admin</a>
+            </li>
+            <li>
+              <a href="{{url_for('logout')}}"><span class="material-symbols-outlined"> logout </span>Logout</a>
+            </li>
+          </ul>
+          <div class="user-account">
+            <div class="user-profile">
+              <img src="https://img.icons8.com/ios-filled/100/FFFFFF/user-male-circle.png" alt="Profile Image" />
+              <div class="user-detail">
+                <h3>{{username}}</h3>
+                <span>{{number}}</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </nav>
+      
+<!-- navigation bar----------------------------------------------------------------------------------------------------------------------- -->
+     
+      <section class="home-section">
+       
+        <nav>
+          <div class="sidebar-button">
+            <i class='bx bx-menu sidebarBtn'></i>
+            <span class="dashboard">Dashboard</span>
+          </div>
+        </nav>
+       
+        <div class="home-content">
+          {% with messages = get_flashed_messages() %}
+          {% if messages %}
+           {% for message in messages %}
+              <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                 {{ message }}   
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div> 
+  
+                      {% endfor %}
+           {% endif %}
+           
+  
+          {% endwith %} 
+          <div class="overview-boxes">
+            <div class="box">
+              <div class="right-side">
+                <div class="box-topic">Total balance</div>
+                <div class="number" >{{balance}}</div>
+                <div class="indicator">
+                  <i class='bx bx-up-arrow-alt'></i>
+                  <span class="text">Up from yesterday</span>
+                </div>
+              </div>
+              <img width="56" height="56" src="https://img.icons8.com/color/96/rupee--v1.png" alt="rupee--v1"/>
+            </div>
+            <div class="box1">
+              <div class="profile_image">
+              <img width="96" height="96" src="https://img.icons8.com/fluency/96/person-male.png" alt="person-male"/>
+              </div>
+              <div class="custom">
+                <p>Name : <b>{{username}}</b> </p>
+                 <p>phone : <b>{{number}}</b> </p>
+                 <p>Email : <b>{{email}}</b> </p>
+              </div>
+              </div>
+          </div>
+    
+          <div class="sales-boxes">
+            <div class="recent-sales box">
+              <div class="title">Recent Trips</div>
+              
+              <div>
+                <table class="table  text-dark " >
+                  <thead>
+                    <tr >
+                      <th scope="col">Sr.No</th>
+                      <th scope="col">From</th>
+                      <th scope="col"></th>
+                      <th scope="col">To</th>
+                      <th scope="col">Vehicle</th>
+                      <th scope="col">Distance</th>
+                      <th scope="col">fine</th>
+                      <th scope="col">Toll-Tax</th>
+                      <th scope="col">Total</th>
+                      <th scope="col">Map</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for bill in user %}
+          
+                    <tr>
+                      <th scope="row">{{loop.index}}</th>
+                      <td>{{bill.destination1}}</td>
+                      <td ><img width="16" height="16" src="https://img.icons8.com/cotton/64/000000/double-path.png" alt="double-path"/></td>
+                      <td>{{bill.destination2}}</td>
+                      <td>{{bill.vehicle}}</td>
+                      <td>{{bill.distance}}</td>
+                      <td>{{bill.fine}}</td>
+                      <td>{{bill.tax}}</td>
+                      <td style="color: rgb(125, 206, 2);">{{bill.total}}</td>
+                      <td><a href="{{ url_for('view_image', upload_id=bill.id) }}" class="btn btn-primary">Map</a></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+              </table>
+              </div>
+        
+
+              </div>
+            </div>
+
+      </section>
+
+    
+
+     
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOME</title>
+    <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png')}}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='style/style.css')}}">
+</head>
+<body>
+<nav>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img src="static/images/logo.png" alt="logo" />
+      <h2>Simulation</h2>
+    </div>
+    <ul class="sidebar-links">
+      <h4>
+        <span>Main Menu</span>
+        <div class="menu-separator"></div>
+      </h4>
+      <li>
+        <a href="{{url_for('profile')}}">
+          <span class="material-symbols-outlined"> dashboard </span>Dashboard</a>
+      </li>
+      <li>
+        <a href="{{url_for('analytics')}}"><span class="material-symbols-outlined"> Analytics </span>Analysis</a>
+      </li>
+      <li>
+        <a href="{{url_for('simulation')}}"><span class="material-symbols-outlined"> monitoring </span>Simulation</a>
+      </li>
+      <h4>
+        <span>General</span>
+        <div class="menu-separator"></div>
+      </h4>
+      <li>
+        <a href="{{url_for('recharge')}}"><span class="material-symbols-outlined"> Wallet </span>Recharge</a>
+      </li>
+      <li>
+        <a href="{{url_for('map')}}"><span class="material-symbols-outlined"> map </span>Map</a>
+      </li>
+      <li>
+        <a href="{{url_for('price')}}"><span class="material-symbols-outlined"> money </span>Rates</a>
+      </li>
+      <h4>
+        <span>Account</span>
+        <div class="menu-separator"></div>
+      </h4>
+      <li>
+        <a href="{{url_for('admin_login')}}"><span class="material-symbols-outlined"> account_circle </span>Admin</a>
+      </li>
+      <li>
+        <a href="{{url_for('logout')}}"><span class="material-symbols-outlined"> logout </span>Logout</a>
+      </li>
+    </ul>
+    <div class="user-account">
+      <div class="user-profile">
+        <img src="https://img.icons8.com/ios-filled/100/FFFFFF/user-male-circle.png" alt="Profile Image" />
+        <div class="user-detail">
+          <h3>{{username}}</h3>
+          <span>{{number}}</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+</nav> 
+<main class="main-data">
+    <video autoplay loop muted class="video_section">
+        <source src="static/images/video.mp4" type="video/mp4">
+    </video>
+    <div class="title_main">
+    <h1 style="color: aliceblue;">TOLL MANAGEMENT AND SPEED PREDICTION USING ARIMA</h1>
+    </div>
+    <div class="card">
+      <P>
+      Traffic congestion and delays at toll plazas are a persistent problem.
+      The project has been designed for the automation of toll tax payments 
+      by calculating the distance travelled by the vehicle.This project aims 
+      at designing a system, which automatically identifies the vehicle when 
+      it enters the Toll-Zone and initiates the system to process the 
+      distance travelled and the automated deduction of Toll tax. 
+      </P>
+  </div>
+
+  <section class="box">
+    <div class="section">
+      <div class="title_main">
+        <h1 style=" font-size: xx-large;color: rgb(255, 255, 255);">CONTENTS</h1>
+      </div>
+        <div class="feats">
+            <div class="feat">
+                <h3><span class="material-symbols-outlined"> map </span>MAP</h3>
+                <p>The section displays the simulation map of the vehicle accessing it's coordinates.</p>
+            </div>
+            <div class="feat">
+                <h3><span class="material-symbols-outlined"> Analytics </span>ANALYSIS</h3>
+                <p>The section contains systematic computational analysis of the user's journey.</p>
+            </div>
+            <div class="feat">
+                <h3><span class="material-symbols-outlined"> monitoring </span>SIMULATION</h3>
+                <p>The section performs the simulation and calculates the toll for the traveled distance.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+  <path fill="#161A2D" fill-opacity="1" d="M0,64L360,224L720,256L1080,160L1440,64L1440,320L1080,320L720,320L360,320L0,320Z"></path>
+</svg> -->
+<!-- <div style="width:100%;height: 20px; background-color: #161A2D;margin-top:8%;"></div> -->
+    <div class="fotter">
+      <a href="{{url_for('about')}}"><img width="46" height="46" src="https://img.icons8.com/color/96/about.png" alt="about"/></a>
+    </div>
+</main>
+</body>
+</html>
