@@ -29,6 +29,241 @@ import seaborn as sns
 #setting up  a flask application  
 app = Flask(__name__)
 
+#######################################################################################
+
+from flask_mail import Mail, Message
+import os
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME', 'tollserver001@gmail.com')  # Your email address
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', 'uesm xfll lwdx hiio')  # Your email password
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME', 'tollserver001@gmail.com')  # Default sender
+
+
+mail = Mail(app)  # Initialize Flask-Mail
+
+@app.route('/simulation', methods=['GET', 'POST'])
+@login_required
+def simulation():
+    date_today = datetime.date.today()
+    image_map = paths()  # Assuming this function returns image paths or map data
+    
+    if request.method == 'POST':
+        starting_coordinates = request.form['DecimalInput']
+        ending_coordinates = request.form['DecimalInput1']
+        vehicle_type = request.form['Vehicle_type']
+        
+        # Allocating coordinates
+        start = coordinates_allot(starting_coordinates)
+        end = coordinates_allot(ending_coordinates)
+        
+        global file1_path
+        file1_path = paths_allocated(starting_coordinates, ending_coordinates)
+
+        # Generate random speed limits
+        speed_limits = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120]  
+        num_steps = random.randint(6, len(speed_limits)) 
+        steps = [random.randrange(10) for _ in range(num_steps)]  
+        modified_limits = [limit + step for limit, step in zip(speed_limits, steps)]
+        avg_speed = round((sum(modified_limits) / 12))
+        
+        # Check if the start and end coordinates are the same
+        if start == end:
+            flash("Both the locations are the same.")
+            return render_template('user/simulate.html', image=image_map)
+        else:
+            df1 = pd.read_csv(file1_path)  # Car simulation data
+            df2 = pd.read_csv(file2_path)  # Zone data
+
+            gdf1 = gpd.GeoDataFrame(df1, geometry=gpd.points_from_xy(df1.longitude, df1.latitude))
+            gdf2 = gpd.GeoDataFrame(df2, geometry=gpd.points_from_xy(df2.longitude, df2.latitude))
+            gdf2_sindex = gdf2.sindex
+
+            def find_matches(gdf1, gdf2, threshold=0.01):
+                matches = []
+                for idx1, point in gdf1.iterrows():
+                    possible_matches_index = list(gdf2_sindex.intersection(point.geometry.buffer(threshold).bounds))
+                    possible_matches = gdf2.iloc[possible_matches_index]
+                    for idx2, match_point in possible_matches.iterrows():
+                        if point.geometry.distance(match_point.geometry) <= threshold:
+                            matches.append((idx1, idx2))
+                return matches
+
+            matches = find_matches(gdf1, gdf2)
+
+            if matches:
+                start_lat = gdf1.loc[matches[0][0], 'latitude']
+                start_lon = gdf1.loc[matches[0][0], 'longitude']
+                end_lat = gdf2.loc[matches[-1][1], 'latitude']
+                end_lon = gdf2.loc[matches[-1][1], 'longitude']
+                
+                df = pd.read_csv(file1_path)
+                selected_columns = df[["longitude", "latitude"]]
+                tilemapbase.init(create=True)
+
+                expand = 0.002
+                extent = tilemapbase.Extent.from_lonlat(
+                    selected_columns.longitude.min() - expand,
+                    selected_columns.longitude.max() + expand,
+                    selected_columns.latitude.min() - expand,
+                    selected_columns.latitude.max() + expand,
+                )
+
+                map_projected = selected_columns.apply(
+                    lambda x: tilemapbase.project(x.longitude, x.latitude), axis=1
+                ).apply(pd.Series)
+                map_projected.columns = ["x", "y"]
+
+                tiles = tilemapbase.tiles.build_OSM()
+                fig, ax = plt.subplots(figsize=(8, 8), dpi=300)
+                ax.xaxis.set_visible(False)
+                ax.yaxis.set_visible(False)
+                plotter = tilemapbase.Plotter(extent, tiles, height=600)
+                plotter.plot(ax, tiles, alpha=0.8)
+                ax.plot(map_projected.x, map_projected.y, color="red", linewidth=1)
+                plt.axis("off")
+
+                buf = io.BytesIO()
+                fig.savefig(buf, format="png", bbox_inches="tight", pad_inches=0, dpi=300)
+                buf.seek(0)
+                image_upload = buf.getvalue()
+                image_data = base64.b64encode(buf.read()).decode('utf-8')
+                plt.close(fig)
+
+                data1 = Admindata.query.filter_by(location1=starting_coordinates, location2=ending_coordinates).all()
+                data2 = Admindata.query.filter_by(location1=ending_coordinates, location2=starting_coordinates).all()
+
+                if data1:
+                    for data in data1:
+                        vh1 = data.Bike
+                        vh2 = data.Car
+                        vh3 = data.Truck
+                        vh4 = data.Others
+                    rate = vh4
+                elif data2:
+                    for data in data2:
+                        vh1 = data.Bike
+                        vh2 = data.Car
+                        vh3 = data.Truck
+                        vh4 = data.Others
+                    rate = vh4
+
+                rate = vehicle_allocate(vehicle_type, vh1, vh2, vh3, vh4)
+                rates = rate
+
+                distance_rest = geodesic((start_lon, start_lat), (end_lon, end_lat)).km
+                distance = round(distance_rest, 3)
+
+                time_hr = distance / avg_speed
+                time = round(time_hr * 60)
+
+                tax = round((distance) * (rates), 2)
+                total_fine = calculate_fine(avg_speed, 50)
+                total_tax = round((total_fine + tax))
+
+                def send_email(username, email, start, end, vehicle, distance, speed, tax, fine, total, balance):
+                    subject = "🚗 Toll Simulation Completed!"
+                    body = f"""
+Hello {username},
+
+Your simulation has been successfully completed. Here are the details:
+
+🔹 **Route**: {start} → {end}
+🔹 **Vehicle Type**: {vehicle}
+🔹 **Distance**: {distance} km
+🔹 **Speed**: {speed} km/h
+🔹 **Tax**: ₹{tax}
+🔹 **Fine**: ₹{fine}
+🔹 **Total Charge**: ₹{total}
+🔹 **Remaining Balance**: ₹{round(balance,2)}
+
+Thank you for using our service!
+
+Best regards,  
+GPS Toll System Team
+                    """
+                    try:
+                        msg = Message(subject, recipients=[email], body=body)
+                        mail.send(msg)
+                        print(f"✅ Email sent to {email}")
+                    except Exception as e:
+                        print(f"❌ Email sending failed: {str(e)}")
+
+                send_email(
+                    current_user.username, current_user.email,
+                    starting_coordinates, ending_coordinates,
+                    vehicle_type, distance, avg_speed, tax, total_fine, total_tax,
+                    current_user.balance
+                )
+                flash("🚀 Simulation completed! A confirmation email has been sent.")
+
+                balance = current_user.balance
+                id = current_user.id
+                user_id_current=current_user.id
+                user = User.query.get(id)
+                if balance < tax:
+                    flash("Insufficient amount")
+                else:
+                    if total_fine > 0:
+                        user = User.query.get(id)
+                        user.balance = user.balance - tax - total_fine
+                        db.session.commit()
+                        flash("Amount is deducted! Please check account for more")
+                        flash("Fine is charged!!")
+                    else:
+                        deduct_tax(tax, id)
+                        flash("Amount is deducted! Please check account for more")
+
+                bill1 = Bill(destination1=starting_coordinates,
+                            destination2=ending_coordinates,
+                            fine=total_fine,
+                            total=total_tax,
+                            distance=distance,
+                            tax=tax,
+                            user_id=id,
+                            vehicle=vehicle_type,
+                            image=image_upload)
+                user.bills.append(bill1)
+                db.session.add(user)
+                db.session.commit()
+
+                List = [starting_coordinates, ending_coordinates, vehicle_type, total_fine, total_tax, distance, tax, user_id_current]
+                file_path = 'datasets/simulation.csv'
+
+                with open(file_path, 'a', newline='') as f_object:
+                    writer_object = csv.writer(f_object)
+                    writer_object.writerow(List)
+                    f_object.close()
+
+            else:
+                render_template('user/simulate.html', image=image_map)
+
+        return render_template('user/result.html',
+                               distance=distance,
+                               vehicle=vehicle_type,
+                               speed=avg_speed,
+                               tax=tax,
+                               username=current_user.username,
+                               number=current_user.mobnumber,
+                               id=current_user.id,
+                               destination1=starting_coordinates.upper(),
+                               destination2=ending_coordinates.upper(),
+                               date=date_today,
+                               email=current_user.email,
+                               time=time,
+                               fine=total_fine,
+                               total=total_tax,
+                               image=image_data,
+                               bike=vh1,
+                               car=vh2,
+                               truck=vh3,
+                               other=vh4)
+
+    else:
+        return render_template('user/simulate.html', image=image_map)
+###########################################################################################
 
 app.secret_key='teamtechconnect'
 
@@ -213,233 +448,233 @@ fine=120
 
 
 # making a simulation process
-@app.route('/simulation', methods=['GET', 'POST'])
-@login_required
-def simulation():
-  # To access current date for bill generation 
-  date_today = datetime.date.today()
-  image_map=paths()
-  #setting the starting and ending value for simulation 
-  if request.method == 'POST':
-    starting_coordinates = request.form['DecimalInput']
-    ending_coordinates = request.form['DecimalInput1']
-    vehicle_type = request.form['Vehicle_type']
-    # weather_condition = request.form['weather']
+# @app.route('/simulation', methods=['GET', 'POST'])
+# @login_required
+# def simulation():
+#   # To access current date for bill generation 
+#   date_today = datetime.date.today()
+#   image_map=paths()
+#   #setting the starting and ending value for simulation 
+#   if request.method == 'POST':
+#     starting_coordinates = request.form['DecimalInput']
+#     ending_coordinates = request.form['DecimalInput1']
+#     vehicle_type = request.form['Vehicle_type']
+#     # weather_condition = request.form['weather']
     
     
-    #allocating the coordinates to start and end ,to check wether the coordinates are same or not  
-    start=coordinates_allot(starting_coordinates)
-    end=coordinates_allot(ending_coordinates)
+#     #allocating the coordinates to start and end ,to check wether the coordinates are same or not  
+#     start=coordinates_allot(starting_coordinates)
+#     end=coordinates_allot(ending_coordinates)
 
-    #the pseudo entry and exit is in the form of csv , allocating the csv file into file1_path for further simulation  
-    global file1_path
-    file1_path=paths_allocated(starting_coordinates,ending_coordinates)
+#     #the pseudo entry and exit is in the form of csv , allocating the csv file into file1_path for further simulation  
+#     global file1_path
+#     file1_path=paths_allocated(starting_coordinates,ending_coordinates)
     
-    # generating  avg speed for simulation , changes every time 
-    speed_limits = [10, 20, 30,40,50,60,70,80,90,100,110,120]  # List of speed limits
-    num_steps = random.randint(6,len(speed_limits)) 
-    steps = [random.randrange(10) for _ in range(num_steps)]  # Generate random steps
+#     # generating  avg speed for simulation , changes every time 
+#     speed_limits = [10, 20, 30,40,50,60,70,80,90,100,110,120]  # List of speed limits
+#     num_steps = random.randint(6,len(speed_limits)) 
+#     steps = [random.randrange(10) for _ in range(num_steps)]  # Generate random steps
 
-    # Add random steps to each speed limit
-    modified_limits = [limit + step for limit, step in zip(speed_limits, steps)]
-    avg_speed=round((sum(modified_limits)/12))
+#     # Add random steps to each speed limit
+#     modified_limits = [limit + step for limit, step in zip(speed_limits, steps)]
+#     avg_speed=round((sum(modified_limits)/12))
     
     
-    # checking boths the entry and exit are same or not
-    if start==end:
-        flash("both the location are same")
-        return render_template('user/simulate.html',image=image_map)
-    else:
-        df1 = pd.read_csv(file1_path) # car simulation data
-        df2 = pd.read_csv(file2_path) # zone data
+#     # checking boths the entry and exit are same or not
+#     if start==end:
+#         flash("both the location are same")
+#         return render_template('user/simulate.html',image=image_map)
+#     else:
+#         df1 = pd.read_csv(file1_path) # car simulation data
+#         df2 = pd.read_csv(file2_path) # zone data
 
-        # Create GeoDataFrames
-        gdf1 = gpd.GeoDataFrame(df1, geometry=gpd.points_from_xy(df1.longitude, df1.latitude))
-        gdf2 = gpd.GeoDataFrame(df2, geometry=gpd.points_from_xy(df2.longitude, df2.latitude))
+#         # Create GeoDataFrames
+#         gdf1 = gpd.GeoDataFrame(df1, geometry=gpd.points_from_xy(df1.longitude, df1.latitude))
+#         gdf2 = gpd.GeoDataFrame(df2, geometry=gpd.points_from_xy(df2.longitude, df2.latitude))
 
-        # Create spatial index for gdf2
-        gdf2_sindex = gdf2.sindex
+#         # Create spatial index for gdf2
+#         gdf2_sindex = gdf2.sindex
 
-        # Define a function to find matching points
-        def find_matches(gdf1, gdf2, threshold=0.01):
-            matches = []
-            for idx1, point in gdf1.iterrows():
-                possible_matches_index = list(gdf2_sindex.intersection(point.geometry.buffer(threshold).bounds))
-                possible_matches = gdf2.iloc[possible_matches_index]
-                for idx2, match_point in possible_matches.iterrows():
-                    if point.geometry.distance(match_point.geometry) <= threshold:
-                        matches.append((idx1, idx2))
-            return matches
+#         # Define a function to find matching points
+#         def find_matches(gdf1, gdf2, threshold=0.01):
+#             matches = []
+#             for idx1, point in gdf1.iterrows():
+#                 possible_matches_index = list(gdf2_sindex.intersection(point.geometry.buffer(threshold).bounds))
+#                 possible_matches = gdf2.iloc[possible_matches_index]
+#                 for idx2, match_point in possible_matches.iterrows():
+#                     if point.geometry.distance(match_point.geometry) <= threshold:
+#                         matches.append((idx1, idx2))
+#             return matches
 
-        # Find matches
-        matches = find_matches(gdf1, gdf2)
+#         # Find matches
+#         matches = find_matches(gdf1, gdf2)
 
-# If matches are found, fetch the starting and ending coordinates
-        if matches:
-            start_lat = gdf1.loc[matches[0][0], 'latitude']
-            start_lon = gdf1.loc[matches[0][0], 'longitude']
-            end_lat = gdf2.loc[matches[-1][1], 'latitude']
-            end_lon = gdf2.loc[matches[-1][1], 'longitude']
+# # If matches are found, fetch the starting and ending coordinates
+#         if matches:
+#             start_lat = gdf1.loc[matches[0][0], 'latitude']
+#             start_lon = gdf1.loc[matches[0][0], 'longitude']
+#             end_lat = gdf2.loc[matches[-1][1], 'latitude']
+#             end_lon = gdf2.loc[matches[-1][1], 'longitude']
             
         
             
-            # reading csv file of vehicle simulation to generate the paths/route the vehicle traveled during trip.
-            df = pd.read_csv(file1_path)
-            selected_columns = df[["longitude", "latitude"]]
-            tilemapbase.init(create=True)
+#             # reading csv file of vehicle simulation to generate the paths/route the vehicle traveled during trip.
+#             df = pd.read_csv(file1_path)
+#             selected_columns = df[["longitude", "latitude"]]
+#             tilemapbase.init(create=True)
 
-            expand = 0.002
-            extent = tilemapbase.Extent.from_lonlat(
-                        selected_columns.longitude.min() - expand,
-                        selected_columns.longitude.max() + expand,
-                        selected_columns.latitude.min() - expand,
-                        selected_columns.latitude.max() + expand,
-                         )
+#             expand = 0.002
+#             extent = tilemapbase.Extent.from_lonlat(
+#                         selected_columns.longitude.min() - expand,
+#                         selected_columns.longitude.max() + expand,
+#                         selected_columns.latitude.min() - expand,
+#                         selected_columns.latitude.max() + expand,
+#                          )
 
-            map_projected = selected_columns.apply(
-            lambda x: tilemapbase.project(x.longitude, x.latitude), axis=1
-            ).apply(pd.Series)
-            map_projected.columns = ["x", "y"]
+#             map_projected = selected_columns.apply(
+#             lambda x: tilemapbase.project(x.longitude, x.latitude), axis=1
+#             ).apply(pd.Series)
+#             map_projected.columns = ["x", "y"]
 
-            tiles = tilemapbase.tiles.build_OSM()
+#             tiles = tilemapbase.tiles.build_OSM()
 
-            fig, ax = plt.subplots(figsize=(8, 8), dpi=300)
-            ax.xaxis.set_visible(False)
-            ax.yaxis.set_visible(False)
-            plotter = tilemapbase.Plotter(extent, tiles, height=600)
-            plotter.plot(ax, tiles, alpha=0.8)
-            ax.plot(map_projected.x, map_projected.y, color="red", linewidth=1)
-            plt.axis("off")
+#             fig, ax = plt.subplots(figsize=(8, 8), dpi=300)
+#             ax.xaxis.set_visible(False)
+#             ax.yaxis.set_visible(False)
+#             plotter = tilemapbase.Plotter(extent, tiles, height=600)
+#             plotter.plot(ax, tiles, alpha=0.8)
+#             ax.plot(map_projected.x, map_projected.y, color="red", linewidth=1)
+#             plt.axis("off")
 
-            # Creating buffer for image data
-            buf = io.BytesIO()
-            fig.savefig(buf, format="png", bbox_inches="tight", pad_inches=0, dpi=300)
-            buf.seek(0)
-            image_upload=buf.getvalue()
-            # Encoding the image data to base64 to emmbeded it into html file
-            image_data = base64.b64encode(buf.read()).decode('utf-8')
-            plt.close(fig)
-            #fetching the data from admindata to apply the current price of tax for each vehicle according to admin
-            data1 = Admindata.query.filter_by(location1=starting_coordinates, location2=ending_coordinates).all()
-            data2 = Admindata.query.filter_by(location1=ending_coordinates, location2=starting_coordinates).all()
-            if data1:
-                for data in data1: 
-                   vh1=data.Bike
-                   vh2=data.Car
-                   vh3=data.Truck
-                   vh4=data.Others
-                rate=vh4
-                # print(vh1,vh2,vh3,vh4,vehicle_type) 
-            elif data2:
-                for data in data2: 
-                   vh1=data.Bike
-                   vh2=data.Car
-                   vh3=data.Truck
-                   vh4=data.Others
-                rate=vh4           
+#             # Creating buffer for image data
+#             buf = io.BytesIO()
+#             fig.savefig(buf, format="png", bbox_inches="tight", pad_inches=0, dpi=300)
+#             buf.seek(0)
+#             image_upload=buf.getvalue()
+#             # Encoding the image data to base64 to emmbeded it into html file
+#             image_data = base64.b64encode(buf.read()).decode('utf-8')
+#             plt.close(fig)
+#             #fetching the data from admindata to apply the current price of tax for each vehicle according to admin
+#             data1 = Admindata.query.filter_by(location1=starting_coordinates, location2=ending_coordinates).all()
+#             data2 = Admindata.query.filter_by(location1=ending_coordinates, location2=starting_coordinates).all()
+#             if data1:
+#                 for data in data1: 
+#                    vh1=data.Bike
+#                    vh2=data.Car
+#                    vh3=data.Truck
+#                    vh4=data.Others
+#                 rate=vh4
+#                 # print(vh1,vh2,vh3,vh4,vehicle_type) 
+#             elif data2:
+#                 for data in data2: 
+#                    vh1=data.Bike
+#                    vh2=data.Car
+#                    vh3=data.Truck
+#                    vh4=data.Others
+#                 rate=vh4           
  
-            #Allocating the rates according to the vehicle type 
-            rate=vehicle_allocate(vehicle_type,vh1,vh2,vh3,vh4)        
-            rates=rate 
+#             #Allocating the rates according to the vehicle type 
+#             rate=vehicle_allocate(vehicle_type,vh1,vh2,vh3,vh4)        
+#             rates=rate 
 
-            #calculating the  distance between staring and ending coordinates
-            distance_rest= geodesic((start_lon,start_lat), (end_lon,end_lat)).km
-            distance=round(distance_rest,3)
+#             #calculating the  distance between staring and ending coordinates
+#             distance_rest= geodesic((start_lon,start_lat), (end_lon,end_lat)).km
+#             distance=round(distance_rest,3)
 
-            #calculating the time
-            time_hr=distance/avg_speed
-            time=round(time_hr*60)
+#             #calculating the time
+#             time_hr=distance/avg_speed
+#             time=round(time_hr*60)
 
-            #calculating the  tax
-            tax=round((distance)*(rates),2)
+#             #calculating the  tax
+#             tax=round((distance)*(rates),2)
             
-            #total amount calculation, including fine    
-            total_fine=calculate_fine(avg_speed,50) #if the vehicle is overspeeding the fine is charged
-            total_tax=round((total_fine+tax))
+#             #total amount calculation, including fine    
+#             total_fine=calculate_fine(avg_speed,50) #if the vehicle is overspeeding the fine is charged
+#             total_tax=round((total_fine+tax))
             
 
-            #modifying the balance of current user
-            balance = current_user.balance
-            id=current_user.id
+#             #modifying the balance of current user
+#             balance = current_user.balance
+#             id=current_user.id
 
-            if balance <tax:
-                flash("insufficent amount")
+#             if balance <tax:
+#                 flash("insufficent amount")
 
-            else:
+#             else:
 
-                #checking is fine is charged for the simulation 
-                if total_fine>0:
-                    user = User.query.get(id)
-                    user.balance= user.balance-tax-total_fine
-                    db.session.commit()
-                    flash("Amount is deducted ! please check account for more")
-                    flash("fine is charge!!")
+#                 #checking is fine is charged for the simulation 
+#                 if total_fine>0:
+#                     user = User.query.get(id)
+#                     user.balance= user.balance-tax-total_fine
+#                     db.session.commit()
+#                     flash("Amount is deducted ! please check account for more")
+#                     flash("fine is charge!!")
                     
-                else:   
-                    deduct_tax(tax,id)    
-                    flash("Amount is deducted ! please check account for more")
+#                 else:   
+#                     deduct_tax(tax,id)    
+#                     flash("Amount is deducted ! please check account for more")
             
-            #generated bill is added to user profile 
-            user_id_current=current_user.id
-            user = User.query.get(id)
-            bill1=Bill(destination1=starting_coordinates,
-                       destination2=ending_coordinates,
-                       fine=total_fine ,
-                       total=total_tax,
-                       distance=distance,
-                       tax=tax,
-                       user_id=id,
-                       vehicle=vehicle_type,
-                       image=image_upload)  
-            user.bills.append(bill1)
-            db.session.add(user)
-            db.session.commit()
+#             #generated bill is added to user profile 
+#             user_id_current=current_user.id
+#             user = User.query.get(id)
+#             bill1=Bill(destination1=starting_coordinates,
+#                        destination2=ending_coordinates,
+#                        fine=total_fine ,
+#                        total=total_tax,
+#                        distance=distance,
+#                        tax=tax,
+#                        user_id=id,
+#                        vehicle=vehicle_type,
+#                        image=image_upload)  
+#             user.bills.append(bill1)
+#             db.session.add(user)
+#             db.session.commit()
             
-            List = [ starting_coordinates, ending_coordinates, vehicle_type, total_fine,total_tax,distance, tax, user_id_current]
+#             List = [ starting_coordinates, ending_coordinates, vehicle_type, total_fine,total_tax,distance, tax, user_id_current]
     
-            # File path
-            file_path = 'datasets/simulation.csv'
+#             # File path
+#             file_path = 'datasets/simulation.csv'
     
-            # Open the CSV file in append mode
-            with open(file_path, 'a', newline='') as f_object:
-                writer_object = csv.writer(f_object)
-                writer_object.writerow(List)
-                f_object.close()
+#             # Open the CSV file in append mode
+#             with open(file_path, 'a', newline='') as f_object:
+#                 writer_object = csv.writer(f_object)
+#                 writer_object.writerow(List)
+#                 f_object.close()
             
 
            
-        else:
-            render_template('user/simulate.html',image=image_map)          
+#         else:
+#             render_template('user/simulate.html',image=image_map)          
 
     
     
 
-    # if sumulation success then the result page is displayed ,else reload the simulation page
-    return render_template('user/result.html',
-                           distance=distance,
-                           vehicle=vehicle_type,
-                           speed=avg_speed,
-                           tax=tax,
-                           username=current_user.username,
-                           number=current_user.mobnumber,
-                           id=current_user.id,
-                           destination1=starting_coordinates.upper(),
-                           destination2=ending_coordinates.upper(),
-                           date=date_today,
-                           email=current_user.email,
-                           time=time,
-                           fine=total_fine,
-                           total=total_tax,
-                           image=image_data,
-                           bike=vh1,
-                           car=vh2,
-                           truck=vh3,
-                           other=vh4
-                           )
+#     # if sumulation success then the result page is displayed ,else reload the simulation page
+#     return render_template('user/result.html',
+#                            distance=distance,
+#                            vehicle=vehicle_type,
+#                            speed=avg_speed,
+#                            tax=tax,
+#                            username=current_user.username,
+#                            number=current_user.mobnumber,
+#                            id=current_user.id,
+#                            destination1=starting_coordinates.upper(),
+#                            destination2=ending_coordinates.upper(),
+#                            date=date_today,
+#                            email=current_user.email,
+#                            time=time,
+#                            fine=total_fine,
+#                            total=total_tax,
+#                            image=image_data,
+#                            bike=vh1,
+#                            car=vh2,
+#                            truck=vh3,
+#                            other=vh4
+#                            )
 
-  #if any of the condition unsatisfied , return the to simulation page  
-  else:
-    return render_template('user/simulate.html',image=image_map)
+#   #if any of the condition unsatisfied , return the to simulation page  
+#   else:
+#     return render_template('user/simulate.html',image=image_map)
 
 
 

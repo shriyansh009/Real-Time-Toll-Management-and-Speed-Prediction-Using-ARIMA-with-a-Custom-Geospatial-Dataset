@@ -16,9 +16,6 @@ def coordinates_allot(loc):
 
   return lat,lon
 
-
-
-
 #method to allocate the dataset of selected module to the path file
 def paths_allocated(loc1, loc2):
     path_map = {

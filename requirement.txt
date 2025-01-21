@@ -1,5 +1,5 @@
 folium==0.17.0
-matplotlib==3.9.1
+Matplotlib==3.8.0
 geopandas==1.0.1
 flask==3.0.3
 geopy==2.4.1
