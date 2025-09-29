@@ -177,7 +177,7 @@ Your simulation has been successfully completed. Here are the details:
 🔹 **Tax**: ₹{tax}
 🔹 **Fine**: ₹{fine}
 🔹 **Total Charge**: ₹{total}
-🔹 **Remaining Balance**: ₹{round(balance,2)}
+🔹 **Remaining Balance**: ₹{round((balance-total),2)}
 
 Thank you for using our service!
 
@@ -716,7 +716,7 @@ def vehicle_allocate(vehicle_type,vh1,vh2,vh3,vh4):
 def calculate_fine(speed, speed_limit):
   # Checking if driver is over speeding
   if speed >= speed_limit:
-     base_fine = 100 # No fine if under speed limit
+     base_fine = 80 # No fine if under speed limit
      excess_speed = speed - speed_limit
      surcharge_per_mph = 5  # Hypothetical surcharge
      speeding_surcharge = excess_speed * surcharge_per_mph
