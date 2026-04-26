@@ -38,7 +38,7 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME', 'tollserver001@gmail.com')  # Your email address
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', 'uesm xfll lwdx hiio')  # Your email password
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', 'MAIL APP PASSWORD')  # Your email password
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME', 'tollserver001@gmail.com')  # Default sender
 
 
